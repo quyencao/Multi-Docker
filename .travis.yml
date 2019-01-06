@@ -1,0 +1,27 @@
+sudo: required
+language: node_js
+node_js:
+  - "8"
+services:
+  - docker
+
+before_install:
+  - docker build -t quyencm/client_dev -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run quyencm/client_dev npm run test -- --coverage
+
+after_success:
+  - docker build -t quyencm/multi-client ./client
+  - docker build -t quyencm/multi-server ./server
+  - docker build -t quyencm/multi-worker ./worker
+  - docker build -t quyencm/multi-nginx ./nginx
+
+  # Login to docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push image to docker hub
+  - docker push quyencm/multi-client
+  - docker push quyencm/multi-server
+  - docker push quyencm/multi-worker
+  - docker push quyencm/multi-nginx
+  
